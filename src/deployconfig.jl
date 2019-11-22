@@ -317,18 +317,25 @@ function post_status(::GitHubActions; type, repo::String, subfolder=nothing, kwa
         # In particular this is only called after we have
         # determined to deploy.
         sha = nothing
+        @debug "Checking GITHUB_EVENT_NAME" get(ENV, "GITHUB_EVENT_NAME", "<not-found>")
         if get(ENV, "GITHUB_EVENT_NAME", nothing) == "pull_request"
             event_path = get(ENV, "GITHUB_EVENT_PATH", nothing)
             event_path === nothing && return
             event = JSON.parsefile(event_path)
+            @debug "Event file" event
+            @show haskey(event, "pull_request")
+            @show haskey(event["pull_request"], "head")
+            @show haskey(event["pull_request"]["head"], "sha")
             if haskey(event, "pull_request") &&
                haskey(event["pull_request"], "head") &&
                haskey(event["pull_request"]["head"], "sha")
                sha = event["pull_request"]["head"]["sha"]
+               @debug "Found sha in event" sha
             end
         elseif get(ENV, "GITHUB_EVENT_NAME", nothing) == "push"
             sha = get(ENV, "GITHUB_SHA", nothing)
         end
+        @debug "Found sha:" sha
         sha === nothing && return
         return post_github_status(type, repo, sha, subfolder)
     catch
