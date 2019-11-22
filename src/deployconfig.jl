@@ -338,8 +338,10 @@ end
 
 function post_github_status(type::S, deploydocs_repo::S, sha::S, subfolder=nothing) where S <: String
     try
+        @debug "Checking for curl" Sys.which("curl")
         Sys.which("curl") === nothing && return
         ## Extract owner and repository name
+        @debug "Checking for repository" deploydocs_repo
         m = match(r"^github.com\/(.+?)\/(.+?\.jl)(.git)?$", deploydocs_repo)
         m === nothing && return
         owner = String(m.captures[1])
@@ -347,6 +349,7 @@ function post_github_status(type::S, deploydocs_repo::S, sha::S, subfolder=nothi
 
         ## Need an access token for this
         auth = get(ENV, "GITHUB_TOKEN", nothing)
+        @debug "Checking for GITHUB_TOKEN" haskey(ENV, "GITHUB_TOKEN")
         auth === nothing && return
         # construct the curl call
         cmd = `curl -sX POST`
